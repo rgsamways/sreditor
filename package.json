@@ -1,0 +1,32 @@
+{
+  "name": "sreditor",
+  "version": "0.0.1",
+  "description": "SR&ED-eligibility judgment CLI for developers using OpenSpec-driven agentic coding workflows.",
+  "type": "module",
+  "bin": {
+    "sreditor": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

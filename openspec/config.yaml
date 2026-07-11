@@ -1,0 +1,31 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Sreditor: a CLI that judges a project's archived OpenSpec changes against the
+  CRA SR&ED three-part test (technological uncertainty, systematic investigation,
+  technological advancement), in near real-time rather than reconstructed after
+  the fact. Sreditor is itself built via OpenSpec, so its own archived changes
+  are also Sreditor's own dogfood/calibration data.
+
+  Tech stack: TypeScript (strict), Node.js (>=18), ESM, Commander.js for the CLI,
+  tsup for bundling, tsx for dev runs, vitest for tests, @anthropic-ai/sdk
+  (bring-your-own-key) for LLM calls in later phases.
+
+  Source layout: src/index.ts (CLI entry), src/commands/, src/adapters/
+  (tool-agnostic SourceAdapter interface, OpenSpec adapter first), src/persistence/
+  (JSON-lines helpers), src/paths.ts. Tests mirror src/ under tests/.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+rules:
+  proposal:
+    - Include a "Technical Uncertainty" section stating, in plain language, what
+      was genuinely unknown in advance (not just undecided or unbuilt) and how it
+      was resolved through investigation. Leave it honestly blank/"none" if a
+      change is routine engineering with no real uncertainty — Sreditor's own
+      judgment prompt must stay skeptical, not generous, and its own history
+      should model that.
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
