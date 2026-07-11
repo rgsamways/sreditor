@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { doctor } from './commands/doctor.js';
 import { init } from './commands/init.js';
+import { judge } from './commands/judge.js';
 import { reflect } from './commands/reflect.js';
 import { scan } from './commands/scan.js';
 import { status } from './commands/status.js';
@@ -36,6 +37,12 @@ program
   .command('reflect')
   .description('Append a dated revision to the anchor document')
   .action(() => runAsync(reflect(process.cwd())));
+
+program
+  .command('judge')
+  .description('Judge unjudged archived changes (or one by id) against the CRA three-part test')
+  .argument('[change-id]', 'Judge only this specific archived change, even if already judged')
+  .action((changeId: string | undefined) => runAsync(judge(process.cwd(), changeId)));
 
 function runAsync(promise: Promise<void>): void {
   promise.catch((error: unknown) => {
