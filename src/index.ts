@@ -1,5 +1,7 @@
 import { Command } from 'commander';
 import { doctor } from './commands/doctor.js';
+import { init } from './commands/init.js';
+import { reflect } from './commands/reflect.js';
 import { scan } from './commands/scan.js';
 import { status } from './commands/status.js';
 
@@ -24,5 +26,22 @@ program
   .command('doctor')
   .description('Pre-flight check: API key, source detection, writable state directory')
   .action(() => doctor(process.cwd()));
+
+program
+  .command('init')
+  .description('AI-assisted interview that drafts the anchor document')
+  .action(() => runAsync(init(process.cwd())));
+
+program
+  .command('reflect')
+  .description('Append a dated revision to the anchor document')
+  .action(() => runAsync(reflect(process.cwd())));
+
+function runAsync(promise: Promise<void>): void {
+  promise.catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
 
 program.parse();
