@@ -1,7 +1,30 @@
-import { describe, expect, it } from 'vitest';
-import { computeDateRange, findUnjudgedChangeIds, latestJudgmentPerChange } from '../src/rollup.js';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  computeDateRange,
+  findUnjudgedChangeIds,
+  isRollupStale,
+  latestJudgmentPerChange,
+  readRollupOutput,
+  saveRollupOutput,
+  type RollupOutput,
+} from '../src/rollup.js';
 import type { JudgmentRecord } from '../src/commands/judge.js';
 import type { ChangeArtifact } from '../src/adapters/types.js';
+import type { Project } from '../src/llm/rollup.js';
+
+function project(name: string, contributingChangeIds: string[]): Project {
+  return {
+    name,
+    contributingChangeIds,
+    uncertainty: 'uncertainty',
+    investigation: 'investigation',
+    advancement: 'advancement',
+    confidence: 'high',
+  };
+}
 
 function record(changeId: string, judgedAt: string, overrides: Partial<JudgmentRecord> = {}): JudgmentRecord {
   return {
@@ -62,5 +85,58 @@ describe('computeDateRange', () => {
 
   it('returns "unknown" for an empty list', () => {
     expect(computeDateRange([])).toBe('unknown');
+  });
+});
+
+describe('rollup output persistence', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'sreditor-rollup-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('returns null when no rollup has been saved', () => {
+    expect(readRollupOutput(dir)).toBeNull();
+  });
+
+  it('round-trips a saved rollup output', () => {
+    const output: RollupOutput = {
+      generatedAt: '2026-07-11T00:00:00.000Z',
+      projects: [project('Project A', ['a', 'b'])],
+    };
+
+    saveRollupOutput(dir, output);
+
+    expect(readRollupOutput(dir)).toEqual(output);
+  });
+
+  it('overwrites a previously saved rollup output', () => {
+    saveRollupOutput(dir, { generatedAt: '2026-07-11T00:00:00.000Z', projects: [project('First', ['a'])] });
+    saveRollupOutput(dir, { generatedAt: '2026-07-12T00:00:00.000Z', projects: [project('Second', ['b'])] });
+
+    const result = readRollupOutput(dir);
+    expect(result?.projects).toHaveLength(1);
+    expect(result?.projects[0]?.name).toBe('Second');
+  });
+});
+
+describe('isRollupStale', () => {
+  it('is not stale when the rolled-up ids exactly match the current judged ids', () => {
+    const output: RollupOutput = { generatedAt: 'now', projects: [project('P', ['a', 'b'])] };
+    expect(isRollupStale(output, new Set(['a', 'b']))).toBe(false);
+  });
+
+  it('is stale when a new change has been judged since', () => {
+    const output: RollupOutput = { generatedAt: 'now', projects: [project('P', ['a', 'b'])] };
+    expect(isRollupStale(output, new Set(['a', 'b', 'c']))).toBe(true);
+  });
+
+  it('is stale when a previously judged change no longer appears', () => {
+    const output: RollupOutput = { generatedAt: 'now', projects: [project('P', ['a', 'b'])] };
+    expect(isRollupStale(output, new Set(['a']))).toBe(true);
   });
 });

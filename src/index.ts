@@ -3,6 +3,7 @@ import { doctor } from './commands/doctor.js';
 import { init } from './commands/init.js';
 import { judge } from './commands/judge.js';
 import { reflect } from './commands/reflect.js';
+import { report } from './commands/report.js';
 import { rollup } from './commands/rollup.js';
 import { scan } from './commands/scan.js';
 import { status } from './commands/status.js';
@@ -50,6 +51,11 @@ program
   .description('Group the judgment log into CRA-shaped projects (shows a cost estimate first)')
   .option('-y, --yes', 'Skip the cost-estimate confirmation prompt')
   .action((options: { yes?: boolean }) => runAsync(rollup(process.cwd(), options.yes ?? false)));
+
+program
+  .command('report')
+  .description('Render the saved rollup as a T661-Part-2-structured markdown report')
+  .action(() => report(process.cwd()));
 
 function runAsync(promise: Promise<void>): void {
   promise.catch((error: unknown) => {

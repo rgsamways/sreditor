@@ -146,4 +146,5 @@ vite.config.ts.timestamp-*
 .sreditor/*
 !.sreditor/anchor.md
 *.jsonl
+sreditor-report-*.md
 .env

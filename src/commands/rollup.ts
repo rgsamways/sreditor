@@ -4,7 +4,7 @@ import { createClient, DEFAULT_MODEL, MODEL_INPUT_PRICE_PER_MTOK, MODEL_OUTPUT_P
 import { buildRollupRequest, ROLLUP_MAX_TOKENS, runRollup } from '../llm/rollup.js';
 import { judgmentsFile } from '../paths.js';
 import { readJsonl } from '../persistence/jsonl.js';
-import { computeDateRange, findUnjudgedChangeIds, latestJudgmentPerChange } from '../rollup.js';
+import { computeDateRange, findUnjudgedChangeIds, latestJudgmentPerChange, saveRollupOutput } from '../rollup.js';
 import type { JudgmentRecord } from './judge.js';
 
 function estimateCost(inputTokens: number): { inputCost: number; outputCeiling: number } {
@@ -58,9 +58,11 @@ export async function rollup(cwd: string, skipConfirm = false): Promise<void> {
   }
 
   const projects = await runRollup(records);
+  saveRollupOutput(cwd, { generatedAt: new Date().toISOString(), projects });
+
   const recordsById = new Map(records.map((record) => [record.changeId, record]));
 
-  console.log(`\n${projects.length} project${projects.length === 1 ? '' : 's'}:\n`);
+  console.log(`\n${projects.length} project${projects.length === 1 ? '' : 's'} (saved to .sreditor/rollup.json):\n`);
   for (const project of projects) {
     const contributing = project.contributingChangeIds
       .map((id) => recordsById.get(id))
@@ -69,6 +71,8 @@ export async function rollup(cwd: string, skipConfirm = false): Promise<void> {
     console.log(`- ${project.name} (${computeDateRange(contributing)})`);
     console.log(`  changes: ${project.contributingChangeIds.join(', ')}`);
     console.log(`  confidence: ${project.confidence}`);
-    console.log(`  ${project.narrative}\n`);
+    console.log(`  uncertainty: ${project.uncertainty}`);
+    console.log(`  investigation: ${project.investigation}`);
+    console.log(`  advancement: ${project.advancement}\n`);
   }
 }

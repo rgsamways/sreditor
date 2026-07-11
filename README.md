@@ -6,7 +6,7 @@ Unlike tools that mine generic project-management artifacts (tickets, commits) a
 
 ## Status
 
-Early scaffolding. Currently implemented: `scan`, `status`, `doctor`, `init`, `reflect`, `judge`, `rollup`. All LLM-backed commands require `ANTHROPIC_API_KEY` to be set (default model: `claude-sonnet-5`) — `report` (rendering rollup output to a filing-ready format) not yet built.
+Early scaffolding. Currently implemented: `scan`, `status`, `doctor`, `init`, `reflect`, `judge`, `rollup`, `report`. All LLM-backed commands require `ANTHROPIC_API_KEY` to be set (default model: `claude-sonnet-5`). `report` outputs markdown only for now — CSV/PDF are deferred.
 
 ## Development
 
@@ -29,6 +29,6 @@ npm run typecheck
 | `reflect` | done | Append a dated revision to the anchor document |
 | `judge` | done | Judge one or all unjudged changes against the CRA three-part test, plus drift-auditing against the anchor |
 | `rollup` | done | Group the judgment log into CRA-shaped "projects", with a pre-call cost estimate |
-| `report` | planned | Render rollup output, pre-trimmed to CRA Form T661 Part 2's line limits |
+| `report` | done | Render the saved rollup as markdown structured around CRA Form T661 Part 2's line limits, with real word counts |
 | `config` | planned | Set/view API key env var, model choice, project paths |
 | `export-log` | planned | Raw dump of the judgment log |
