@@ -3,6 +3,7 @@ import { doctor } from './commands/doctor.js';
 import { init } from './commands/init.js';
 import { judge } from './commands/judge.js';
 import { reflect } from './commands/reflect.js';
+import { rollup } from './commands/rollup.js';
 import { scan } from './commands/scan.js';
 import { status } from './commands/status.js';
 
@@ -43,6 +44,12 @@ program
   .description('Judge unjudged archived changes (or one by id) against the CRA three-part test')
   .argument('[change-id]', 'Judge only this specific archived change, even if already judged')
   .action((changeId: string | undefined) => runAsync(judge(process.cwd(), changeId)));
+
+program
+  .command('rollup')
+  .description('Group the judgment log into CRA-shaped projects (shows a cost estimate first)')
+  .option('-y, --yes', 'Skip the cost-estimate confirmation prompt')
+  .action((options: { yes?: boolean }) => runAsync(rollup(process.cwd(), options.yes ?? false)));
 
 function runAsync(promise: Promise<void>): void {
   promise.catch((error: unknown) => {
