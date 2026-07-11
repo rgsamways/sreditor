@@ -56,7 +56,7 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
   let eligibleCount = 0;
 
   for (const artifact of toJudge) {
-    const judgment = await judgeChange(artifact);
+    const judgment = await judgeChange(artifact, cwd);
     const drift = anchorText !== null ? (await compareDrift(anchorText, artifact)).narrative : null;
 
     const record: JudgmentRecord = {

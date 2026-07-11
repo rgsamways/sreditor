@@ -12,7 +12,9 @@ For each project, write three separate fields mirroring CRA Form T661 Part 2's l
 - investigation (Line 244, target under 700 words): the systematic investigation across the project's changes, in chronological order — hypotheses, experiments, results, conclusions.
 - advancement (Line 246, target under 350 words): the technological advancement achieved.
 
-These are target lengths, not hard requirements — write what the evidence actually supports; do not pad or compress content just to hit a count. Reason and narrate in plain language. Do not invent a numeric or categorical score for a project — these three fields are the substantive record, the same as the individual judgments and drift comparisons they're built from. Every judged change provided to you must appear in exactly one project's contributing change ids.`;
+These are target lengths, not hard requirements — write what the evidence actually supports; do not pad or compress content just to hit a count. Reason and narrate in plain language. Do not invent a numeric or categorical score for a project — these three fields are the substantive record, the same as the individual judgments and drift comparisons they're built from. Every judged change provided to you must appear in exactly one project's contributing change ids.
+
+If the underlying judgments contain quantified metrics or benchmarks, carry those specific numbers through into the project-level fields rather than abstracting them away when combining changes — strong CRA narratives are grounded in concrete measurements, and aggregation should not lose that specificity.`;
 
 const ProjectSchema = z.object({
   name: z.string().describe('A short, descriptive name for this project.'),

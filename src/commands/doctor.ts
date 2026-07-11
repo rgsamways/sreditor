@@ -1,12 +1,20 @@
 import { accessSync, constants, existsSync, mkdirSync } from 'node:fs';
 import { openSpecAdapter } from '../adapters/openspec.js';
 import { sreditorDir } from '../paths.js';
+import { isToolAvailable } from '../tools/detect.js';
 
 interface Check {
   label: string;
   ok: boolean;
   detail: string;
+  informational?: boolean;
 }
+
+const OPTIONAL_TOOLS: { command: string; label: string; installHint: string }[] = [
+  { command: 'scc', label: 'scc (optional)', installHint: 'https://github.com/boyter/scc' },
+  { command: 'jscpd', label: 'jscpd (optional)', installHint: 'npm install -g jscpd' },
+  { command: 'sem', label: 'sem (optional)', installHint: 'https://github.com/ataraxy-labs/sem' },
+];
 
 export function doctor(cwd: string): void {
   const checks: Check[] = [];
@@ -50,11 +58,21 @@ export function doctor(cwd: string): void {
     detail: writable ? dir : `cannot write to ${dir}`,
   });
 
+  for (const tool of OPTIONAL_TOOLS) {
+    const available = isToolAvailable(tool.command);
+    checks.push({
+      label: tool.label,
+      ok: available,
+      detail: available ? 'found' : `not found — richer judgment context if installed (${tool.installHint})`,
+      informational: true,
+    });
+  }
+
   let allOk = true;
   for (const check of checks) {
-    const icon = check.ok ? '✓' : '✗';
+    const icon = check.ok ? '✓' : check.informational ? '·' : '✗';
     console.log(`${icon} ${check.label}: ${check.detail}`);
-    if (!check.ok) allOk = false;
+    if (!check.ok && !check.informational) allOk = false;
   }
 
   if (!allOk) {

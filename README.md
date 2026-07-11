@@ -44,14 +44,26 @@ The core claim of this tool — that it applies the CRA three-part test skeptica
 
 Read the full files for the complete prompts, the structured output schemas, and exactly what gets sent to the model.
 
+## Optional corroborating signals
+
+`judge` can optionally shell out to three external tools, if they're installed, for extra context alongside a change's own artifact text. None of them ever determine `eligible` directly — they're background context the model is explicitly instructed to treat as non-authoritative. `sreditor doctor` shows which are detected; none are required, and judgment quality is unchanged if none are installed.
+
+| Tool | What it adds | Install |
+|---|---|---|
+| [`scc`](https://github.com/boyter/scc) | Size/complexity stats for the files a change touched | download a release binary, or `go install github.com/boyter/scc/v3@latest` |
+| [`jscpd`](https://github.com/kucherenko/jscpd) | Copy/paste duplication detection (low duplication + real complexity is a weak proxy for genuine investigation vs. routine work) | `npm install -g jscpd` |
+| [`sem`](https://github.com/ataraxy-labs/sem) | Entity-level (function/class) diff of what actually changed, not raw line diffs | `brew install sem-cli`, or download a release binary |
+
+Sreditor correlates an archived change to a real diff by finding the git commit that added its `openspec/changes/archive/<id>/` folder and diffing that commit against its parent — verified against this project's own real archive history. **Known limitation:** this only captures the final archiving commit; if your own workflow spans multiple commits between implementing and archiving a change, earlier commits aren't included. `scc`/`jscpd` also run against the *current* working-tree state of the changed files, not their state at the time of the historical commit.
+
 ## Known limitations
 
 Named plainly rather than left implicit, consistent with the same self-judgment standard Sreditor applies to its own archived changes:
 
-- **Corroborating signal tools (`sem`, `jscpd`, `scc`) are not implemented.** These were scoped as optional, runtime-detected corroborating context for the judgment prompt (never something that determines eligibility directly), deliberately deferred past v1. See `judgeChange()` in `src/llm/judgment.ts` if picking this up.
-- **The judgment/rollup prompts don't yet push for quantified metrics.** A real-example comparison against a published CRA T661 narrative during development showed that strong eligible narratives lean on hard quantified constraints (latency targets, error rates, benchmark deltas); Sreditor's prompts don't currently instruct the model to surface those when they're available in the source material.
+- **Quantified-metrics instruction is implemented but unverified.** The judgment and rollup prompts now explicitly instruct the model to carry forward specific numbers (latency figures, error rates, benchmark deltas) from the source text rather than describing them in the abstract — a real-example comparison against a published CRA T661 narrative showed strong eligible narratives lean on this kind of concrete grounding. This hasn't been tested against real eligible/quantified data yet, only added as a prompt instruction — see the calibration-set limitation below.
 - **The T661 register has only been checked against a deliberately ineligible calibration set.** During development, generated output was compared against a real published CRA T661 example and CRA's own "what to avoid" guidance — it held up on register (analytical "whether X could Y" framing, no marketing language), but the calibration set used was Sreditor's own build, which correctly judges itself ineligible throughout. That comparison hasn't been re-run against a real, genuinely eligible project.
-- **Vitest's test suite has an intermittent worker-pool flake** on Node v25.8.0 + Windows (mitigated via `fileParallelism: false` in `vitest.config.ts`, not fully eliminated — very occasionally needs a retry).
+- **Canada's CRA SR&ED program only.** This is not a general international R&D tax credit tool — the three-part test, drift-auditing framing, and `report`'s T661 line structure are all specific to CRA's actual rules and form. Other jurisdictions' programs are out of scope.
+- **OpenSpec is the only implemented source adapter.** The `SourceAdapter` interface (`src/adapters/`) was designed to be tool-agnostic so other spec-driven workflows (e.g. spec-kit) could plug in later, but only the OpenSpec adapter actually exists today — Sreditor only works on projects that already use OpenSpec.
 - `report` currently outputs markdown only; CSV/PDF are deferred.
 - `config` and `export-log` (see the roadmap below) aren't built yet.
 
