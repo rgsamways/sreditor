@@ -5,6 +5,7 @@ import { buildRollupRequest, ROLLUP_MAX_TOKENS, runRollup } from '../llm/rollup.
 import { judgmentsFile } from '../paths.js';
 import { readJsonl } from '../persistence/jsonl.js';
 import { computeDateRange, findUnjudgedChangeIds, latestJudgmentPerChange, saveRollupOutput } from '../rollup.js';
+import { submitStatsIfOptedIn } from '../telemetry/submit.js';
 import type { JudgmentRecord } from './judge.js';
 
 function estimateCost(inputTokens: number): { inputCost: number; outputCeiling: number } {
@@ -75,4 +76,6 @@ export async function rollup(cwd: string, skipConfirm = false): Promise<void> {
     console.log(`  investigation: ${project.investigation}`);
     console.log(`  advancement: ${project.advancement}\n`);
   }
+
+  await submitStatsIfOptedIn(cwd);
 }

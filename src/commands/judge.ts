@@ -5,6 +5,7 @@ import { compareDrift } from '../llm/drift.js';
 import { judgeChange, type Judgment } from '../llm/judgment.js';
 import { judgmentsFile } from '../paths.js';
 import { appendJsonl, readJsonl } from '../persistence/jsonl.js';
+import { submitStatsIfOptedIn } from '../telemetry/submit.js';
 
 export interface JudgmentRecord extends Judgment {
   changeId: string;
@@ -76,4 +77,6 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
   }
 
   console.log(`\nJudged ${toJudge.length} change${toJudge.length === 1 ? '' : 's'} (${eligibleCount} eligible).`);
+
+  await submitStatsIfOptedIn(cwd);
 }

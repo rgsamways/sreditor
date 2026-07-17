@@ -7,6 +7,7 @@ import { reflect } from './commands/reflect.js';
 import { report } from './commands/report.js';
 import { rollup } from './commands/rollup.js';
 import { scan } from './commands/scan.js';
+import { statsOff, statsOn, statsShow } from './commands/stats.js';
 import { status } from './commands/status.js';
 
 const program = new Command();
@@ -63,6 +64,25 @@ program
   .command('report')
   .description('Render the saved rollup as a T661-Part-2-structured markdown report')
   .action(() => report(process.cwd()));
+
+const statsCommand = program
+  .command('stats')
+  .description('Manage opt-in, purely-aggregate usage statistics sharing (off by default)');
+
+statsCommand
+  .command('on')
+  .description('Opt in to sharing aggregate usage stats -- prints the exact payload')
+  .action(() => statsOn(process.cwd()));
+
+statsCommand
+  .command('off')
+  .description('Opt out immediately -- nothing further is sent')
+  .action(() => statsOff(process.cwd()));
+
+statsCommand
+  .command('show')
+  .description('Print the exact payload that would be sent, without sending it')
+  .action(() => statsShow(process.cwd()));
 
 function runAsync(promise: Promise<void>): void {
   promise.catch((error: unknown) => {

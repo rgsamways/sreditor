@@ -1,0 +1,30 @@
+{
+  "name": "sreditor-stats-api",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Receives Sreditor's opt-in, aggregate-only usage statistics and stores them in Postgres. See src/telemetry/schema.ts in the main sreditor package for the client-side allowlist this mirrors.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "migrate": "node dist/migrate.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pg": "^8.13.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/pg": "^8.11.10",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.10"
+  }
+}
