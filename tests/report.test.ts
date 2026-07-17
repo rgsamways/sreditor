@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { checkWordLimits, countWords, renderReportMarkdown } from '../src/report.js';
+import { checkWordLimits, countWords, partitionProjects, renderReportMarkdown } from '../src/report.js';
+import type { JudgmentRecord } from '../src/commands/judge.js';
 import type { Project } from '../src/llm/rollup.js';
 import type { RollupOutput } from '../src/rollup.js';
 
@@ -11,6 +12,24 @@ function project(overrides: Partial<Project> = {}): Project {
     investigation: 'Prototyped two approaches and tested both against simulated conflicts.',
     advancement: 'Quantified which approach performs better under real conflict rates.',
     confidence: 'high',
+    eligibleForFiling: true,
+    ...overrides,
+  };
+}
+
+function record(changeId: string, overrides: Partial<JudgmentRecord> = {}): JudgmentRecord {
+  return {
+    changeId,
+    judgedAt: '2026-07-11T00:00:00.000Z',
+    eligible: false,
+    uncertaintyStatement: 'None found.',
+    investigationSteps: 'Routine implementation.',
+    advancement: 'None.',
+    confidence: 'high',
+    reasoning: 'Routine engineering; no genuine technological uncertainty described.',
+    proximity: 'not_close',
+    pathToEligibility: 'Would need a documented technical unknown and systematic investigation of it.',
+    drift: null,
     ...overrides,
   };
 }
@@ -48,6 +67,31 @@ describe('checkWordLimits', () => {
   });
 });
 
+describe('partitionProjects', () => {
+  it('splits filing-ready and excluded projects, preserving order within each group', () => {
+    const output: RollupOutput = {
+      generatedAt: '2026-07-11T00:00:00.000Z',
+      projects: [
+        project({ name: 'Ready A' }),
+        project({ name: 'Excluded A', eligibleForFiling: false }),
+        project({ name: 'Ready B' }),
+        project({ name: 'Excluded B', eligibleForFiling: false }),
+      ],
+    };
+
+    const { filingReady, excluded } = partitionProjects(output);
+
+    expect(filingReady.map((p) => p.name)).toEqual(['Ready A', 'Ready B']);
+    expect(excluded.map((p) => p.name)).toEqual(['Excluded A', 'Excluded B']);
+  });
+
+  it('returns empty arrays when there are no projects', () => {
+    const output: RollupOutput = { generatedAt: '2026-07-11T00:00:00.000Z', projects: [] };
+
+    expect(partitionProjects(output)).toEqual({ filingReady: [], excluded: [] });
+  });
+});
+
 describe('renderReportMarkdown', () => {
   it('renders one section per project with T661 line labels and word counts', () => {
     const output: RollupOutput = {
@@ -55,7 +99,7 @@ describe('renderReportMarkdown', () => {
       projects: [project()],
     };
 
-    const markdown = renderReportMarkdown(output, ['2026-07-11']);
+    const markdown = renderReportMarkdown(output, ['2026-07-11'], new Map());
 
     expect(markdown).toContain('Offline Sync Investigation');
     expect(markdown).toContain('Line 242 — Technological Uncertainty');
@@ -72,9 +116,85 @@ describe('renderReportMarkdown', () => {
       projects: [project({ uncertainty: longText })],
     };
 
-    const markdown = renderReportMarkdown(output, ['2026-07-11']);
+    const markdown = renderReportMarkdown(output, ['2026-07-11'], new Map());
 
     expect(markdown).toContain('over limit, trim before filing');
     expect(markdown).toContain(longText);
+  });
+
+  it('keeps eligibleForFiling=false projects out of the T661-formatted body, in a separate marked section', () => {
+    const output: RollupOutput = {
+      generatedAt: '2026-07-11T00:00:00.000Z',
+      projects: [
+        project(),
+        project({
+          name: 'Other ineligible, unrelated work',
+          eligibleForFiling: false,
+          contributingChangeIds: ['c'],
+          uncertainty: 'No technological uncertainty found across these changes.',
+        }),
+      ],
+    };
+    const recordsById = new Map([['c', record('c', { reasoning: 'Routine Stripe integration; no uncertainty described.' })]]);
+
+    const markdown = renderReportMarkdown(output, ['2026-07-11', '2026-07-11'], recordsById);
+
+    expect(markdown).toContain('## Excluded — not for filing');
+    expect(markdown).toContain('### Other ineligible, unrelated work');
+    expect(markdown).not.toContain('\n## Other ineligible, unrelated work\n');
+    expect(markdown).not.toContain('Line 242 — Technological Uncertainty\n\nNo technological uncertainty found');
+  });
+
+  it('shows each excluded change\'s own judgment reasoning, not just the bucket summary', () => {
+    const output: RollupOutput = {
+      generatedAt: '2026-07-11T00:00:00.000Z',
+      projects: [
+        project({
+          name: 'Other judged, ungrouped work',
+          eligibleForFiling: false,
+          contributingChangeIds: ['f22', 'f09'],
+        }),
+      ],
+    };
+    const recordsById = new Map([
+      ['f22', record('f22', { reasoning: 'Routine Stripe integration; no uncertainty described.' })],
+      ['f09', record('f09', { reasoning: 'A straightforward collection rename with no technical unknowns.' })],
+    ]);
+
+    const markdown = renderReportMarkdown(output, ['2026-07-11'], recordsById);
+
+    expect(markdown).toContain('**f22**');
+    expect(markdown).toContain('Routine Stripe integration; no uncertainty described.');
+    expect(markdown).toContain('**f09**');
+    expect(markdown).toContain('A straightforward collection rename with no technical unknowns.');
+  });
+
+  it('orders excluded changes closest-to-eligible first and includes forward-looking guidance', () => {
+    const output: RollupOutput = {
+      generatedAt: '2026-07-11T00:00:00.000Z',
+      projects: [
+        project({
+          name: 'Other judged, ungrouped work',
+          eligibleForFiling: false,
+          contributingChangeIds: ['far', 'closest', 'middle'],
+        }),
+      ],
+    };
+    const recordsById = new Map([
+      ['far', record('far', { proximity: 'not_close', pathToEligibility: 'Would need any genuine technical question at all.' })],
+      ['closest', record('closest', { proximity: 'close', pathToEligibility: 'Would need the investigation documented as systematic.' })],
+      ['middle', record('middle', { proximity: 'some_signal', pathToEligibility: 'Would need investigation, not just the uncertainty statement.' })],
+    ]);
+
+    const markdown = renderReportMarkdown(output, ['2026-07-11'], recordsById);
+
+    const closestIdx = markdown.indexOf('**closest**');
+    const middleIdx = markdown.indexOf('**middle**');
+    const farIdx = markdown.indexOf('**far**');
+
+    expect(closestIdx).toBeGreaterThan(-1);
+    expect(closestIdx).toBeLessThan(middleIdx);
+    expect(middleIdx).toBeLessThan(farIdx);
+    expect(markdown).toContain('**Path to eligibility (forward-looking):** Would need the investigation documented as systematic.');
   });
 });

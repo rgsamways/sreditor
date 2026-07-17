@@ -9,6 +9,7 @@ import { rollup } from './commands/rollup.js';
 import { scan } from './commands/scan.js';
 import { statsOff, statsOn, statsShow } from './commands/stats.js';
 import { status } from './commands/status.js';
+import { ui } from './commands/ui.js';
 
 const program = new Command();
 
@@ -64,6 +65,11 @@ program
   .command('report')
   .description('Render the saved rollup as a T661-Part-2-structured markdown report')
   .action(() => report(process.cwd()));
+
+program
+  .command('ui')
+  .description('Start a local-only, read-only browser view of judgments/rollup/anchor data')
+  .action(() => runAsync(ui(process.cwd())));
 
 const statsCommand = program
   .command('stats')

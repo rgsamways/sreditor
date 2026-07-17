@@ -23,6 +23,7 @@ function project(name: string, contributingChangeIds: string[]): Project {
     investigation: 'investigation',
     advancement: 'advancement',
     confidence: 'high',
+    eligibleForFiling: true,
   };
 }
 
@@ -36,6 +37,8 @@ function record(changeId: string, judgedAt: string, overrides: Partial<JudgmentR
     advancement: 'advancement',
     confidence: 'high',
     reasoning: 'reasoning',
+    proximity: 'close',
+    pathToEligibility: 'Already eligible; no gap to close.',
     drift: null,
     ...overrides,
   };

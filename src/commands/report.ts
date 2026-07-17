@@ -28,13 +28,17 @@ export function report(cwd: string): void {
     return computeDateRange(contributing);
   });
 
-  const markdown = renderReportMarkdown(rollupOutput, dateRanges);
+  const markdown = renderReportMarkdown(rollupOutput, dateRanges, recordsById);
   const today = new Date().toISOString().slice(0, 10);
   const outputPath = join(cwd, `sreditor-report-${today}.md`);
   writeFileSync(outputPath, markdown, 'utf-8');
 
   console.log(`Report written to ${outputPath}`);
   for (const project of rollupOutput.projects) {
+    if (!project.eligibleForFiling) {
+      console.log(`- ${project.name}: excluded from filing (not a genuine SR&ED narrative)`);
+      continue;
+    }
     const checks = checkWordLimits(project);
     const summary = checks.map((check) => `${check.field} ${check.count}/${check.limit}${check.overLimit ? ' ⚠️' : ''}`).join(', ');
     console.log(`- ${project.name}: ${summary}`);

@@ -16,7 +16,11 @@ Be skeptical, not generous. Assume most software work is routine unless the text
 
 When the source text includes quantified metrics or benchmarks — latency figures, error/throughput rates, before/after measurements, thresholds tested against — carry those specific numbers into uncertaintyStatement, investigationSteps, and advancement rather than describing them in the abstract. Strong CRA narratives are grounded in concrete measurements; do not invent numbers that aren't in the source text, and don't pad vague statements with false precision when no quantified data exists.
 
-If a corroborating signals block is present, treat it strictly as background context, never as evidence that determines eligibility by itself — a change can have real complexity or a small diff and still be ineligible, or vice versa. Your judgment must rest on the change's own artifact text.`;
+If a corroborating signals block is present, treat it strictly as background context, never as evidence that determines eligibility by itself — a change can have real complexity or a small diff and still be ineligible, or vice versa. Your judgment must rest on the change's own artifact text.
+
+For an ineligible change, also set proximity and pathToEligibility. proximity is qualitative, not a numeric score — do not invent false precision. Use "not_close" when no genuine technical question is described at all (purely routine engineering, nothing to build on). Use "some_signal" when exactly one prong has real but incomplete signal — e.g. a genuine technical question is named but never systematically investigated. Use "close" when multiple prongs have real but incomplete signal — e.g. genuine uncertainty is described and something resembling investigation happened, but it wasn't systematic, or was systematic but the outcome/advancement was never clearly resolved or documented.
+
+pathToEligibility must be forward-looking, not a rewrite of this change's history: describe what would need to be true, and what a developer would need to document at decision time, for similar future work to clear the CRA bar — not how to make this specific past change sound eligible. If proximity is "not_close", say briefly why this category of work is unlikely to ever qualify rather than inventing a stretch. Do not suggest padding, reframing, or embellishing an already-completed change's narrative; the goal is to help a developer recognize and document genuine uncertainty the next time it appears, not to retrofit this one. For an eligible change, set proximity to "close" and pathToEligibility to a short note that no gap exists.`;
 
 const JudgmentSchema = z.object({
   eligible: z.boolean().describe('Whether this change meets all three parts of the CRA test.'),
@@ -31,6 +35,16 @@ const JudgmentSchema = z.object({
     .describe('The technological advancement achieved, or an honest statement that none was found.'),
   confidence: z.enum(['high', 'medium', 'low']).describe('Confidence in this eligibility judgment.'),
   reasoning: z.string().describe('Plain-language explanation of why this judgment was reached.'),
+  proximity: z
+    .enum(['not_close', 'some_signal', 'close'])
+    .describe(
+      'Qualitative closeness to eligibility, not a numeric score. "close" for eligible changes (no gap). For ineligible changes: "not_close" if no genuine technical question is described at all; "some_signal" if exactly one CRA prong has real but incomplete signal; "close" if multiple prongs have real but incomplete signal.',
+    ),
+  pathToEligibility: z
+    .string()
+    .describe(
+      'Forward-looking only: what similar future work would need to document at decision time to clear the CRA bar. Never a rewrite or reframing of this change\'s own history. For an already-eligible change, a short note that no gap exists.',
+    ),
 });
 
 export type Judgment = z.infer<typeof JudgmentSchema>;

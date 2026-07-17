@@ -73,6 +73,14 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
     }
 
     console.log(`- ${artifact.id}: eligible=${judgment.eligible} confidence=${judgment.confidence}`);
+    console.log(`  uncertainty: ${judgment.uncertaintyStatement}`);
+    console.log(`  investigation: ${judgment.investigationSteps}`);
+    console.log(`  advancement: ${judgment.advancement}`);
+    console.log(`  reasoning: ${judgment.reasoning}`);
+    if (!judgment.eligible) {
+      console.log(`  proximity: ${judgment.proximity}`);
+      console.log(`  path to eligibility: ${judgment.pathToEligibility}`);
+    }
     console.log(`  drift: ${drift ?? 'not available — no anchor, run `sreditor init`'}`);
   }
 
