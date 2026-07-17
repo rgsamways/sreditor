@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { doctor } from './commands/doctor.js';
+import { explore } from './commands/explore.js';
 import { init } from './commands/init.js';
 import { judge } from './commands/judge.js';
 import { probe } from './commands/probe.js';
@@ -65,6 +66,11 @@ program
   .command('report')
   .description('Render the saved rollup as a T661-Part-2-structured markdown report')
   .action(() => report(process.cwd()));
+
+program
+  .command('explore')
+  .description('Print disclaimed, source-cited field-trend cards -- never eligibility guidance, isolated from the judgment pipeline')
+  .action(() => runAsync(explore()));
 
 program
   .command('ui')
