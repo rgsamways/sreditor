@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sreditor — SR&ED documentation, written as you build</title>
+<meta name="description" content="A CLI that judges your team's work against the CRA's real SR&ED test in near real-time, with every prompt public and deliberately skeptical." />
+<style>
+  :root {
+    color-scheme: light dark;
+    --accent: #3a6ea5;
+    --accent-soft: rgba(58, 110, 165, 0.12);
+    --border: rgba(128, 128, 128, 0.28);
+    --muted-bg: rgba(128, 128, 128, 0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0;
+    line-height: 1.55;
+  }
+  code, .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace; }
+
+  .wrap { max-width: 780px; margin-inline: auto; padding: 0 1.5rem; }
+
+  header.hero { padding: 5rem 0 3.5rem; border-bottom: 1px solid var(--border); }
+  header.hero h1 { font-size: 2.6rem; margin: 0 0 0.6rem; letter-spacing: -0.02em; }
+  header.hero p.tagline { font-size: 1.25rem; opacity: 0.8; margin: 0 0 2rem; max-width: 34rem; }
+  .cta-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+  .cta-row .install {
+    font-size: 0.92rem; background: var(--muted-bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.6rem 0.9rem;
+  }
+  .cta-row a.github { font-size: 0.92rem; opacity: 0.75; text-decoration: none; border-bottom: 1px solid currentColor; }
+  .cta-row a.github:hover { opacity: 1; }
+
+  section { padding: 3.25rem 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  section h2 { font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.65; margin: 0 0 1.25rem; }
+  section p.lede { font-size: 1.05rem; max-width: 42rem; }
+
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 0.9rem 0 0.9rem 3rem; border-top: 1px solid var(--border);
+  }
+  .steps li:first-child { border-top: none; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0.9rem;
+    width: 1.9rem; height: 1.9rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+  }
+  .steps code { background: var(--muted-bg); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.92rem; }
+  .steps .desc { opacity: 0.8; margin-top: 0.2rem; font-size: 0.95rem; }
+
+  .audience-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.25rem; }
+  .audience-card { border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.4rem; }
+  .audience-card h3 { margin: 0 0 0.5rem; font-size: 1.02rem; }
+  .audience-card p { margin: 0; opacity: 0.82; font-size: 0.95rem; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1.5rem; margin-bottom: 1rem; }
+  .stat-tile .value { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-tile .label { font-size: 0.85rem; opacity: 0.65; }
+  #stats-note { font-size: 0.88rem; opacity: 0.7; }
+
+  footer { padding: 3rem 0 4rem; }
+  footer p { font-size: 0.85rem; opacity: 0.65; max-width: 40rem; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <h1>Sreditor</h1>
+    <p class="tagline">SR&ED documentation, written as you build — not reconstructed the night before it's due.</p>
+    <div class="cta-row">
+      <span class="install mono">npm install -g sreditor</span>
+      <a class="github" href="https://github.com/" target="_blank" rel="noopener">View on GitHub →</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>What it is</h2>
+    <p class="lede">
+      Sreditor is a CLI that judges your team's work against the CRA's actual three-part SR&ED
+      test — technological uncertainty, systematic investigation, technological advancement — in
+      near real-time, as changes are archived, not once a year from memory. Every judgment prompt
+      is public, plain TypeScript, and deliberately skeptical rather than generous, because a
+      defensible claim is worth more than a generous one.
+    </p>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><code>sreditor probe</code><div class="desc">Before you build, articulate the genuine uncertainty in your own words — or find honestly that there isn't any.</div></li>
+      <li><code>sreditor judge</code><div class="desc">After a change is archived, it's judged against the real CRA test — not "was this hard," but "was this technologically uncertain."</div></li>
+      <li><code>sreditor rollup</code><div class="desc">Related changes get grouped into one coherent, CRA-shaped project narrative — the level CRA actually wants a claim framed at.</div></li>
+      <li><code>sreditor report</code><div class="desc">A T661 Part 2-structured document, with real word counts against the real per-line limits.</div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Built for everyone in the room</h2>
+    <div class="audience-grid">
+      <div class="audience-card">
+        <h3>Developers</h3>
+        <p>Capture the real story while it's fresh, not from memory in April.</p>
+      </div>
+      <div class="audience-card">
+        <h3>Accountants &amp; filers</h3>
+        <p>Start from a CRA-shaped narrative, not a pile of commit messages to interpret after the fact.</p>
+      </div>
+      <div class="audience-card">
+        <h3>Auditors &amp; CRA reviewers</h3>
+        <p>Every judgment prompt lives in the open-source repo. Nothing here is taken on faith.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Real numbers, not marketing copy</h2>
+    <p class="lede" style="margin-bottom: 1.75rem;">
+      Sharing these stats is opt-in and entirely aggregate — no project name, no reasoning text,
+      no change id is ever collected. See the
+      <a href="https://github.com/" target="_blank" rel="noopener">exact schema</a> for what that means in practice.
+    </p>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-tile"><div class="value" id="stat-installs">—</div><div class="label">independent installs</div></div>
+      <div class="stat-tile"><div class="value" id="stat-judged">—</div><div class="label">changes judged</div></div>
+      <div class="stat-tile"><div class="value" id="stat-rate">—</div><div class="label">found eligible on their own</div></div>
+      <div class="stat-tile"><div class="value" id="stat-projects">—</div><div class="label">filing-ready projects identified</div></div>
+    </div>
+    <p class="lede" style="font-size: 0.88rem; opacity: 0.75; margin: 0.75rem 0 0;">
+      Those last two numbers aren't in tension — they're answering different questions. Most individual
+      changes are, correctly, too routine to be eligible on their own; a real SR&amp;ED narrative usually
+      only becomes visible once several related changes are read together as one investigation. That's
+      why both numbers exist side by side, not just one of them.
+    </p>
+    <p id="stats-note">Loading live stats…</p>
+  </section>
+
+  <footer>
+    <p>
+      Sreditor runs entirely against your own Anthropic API key — nothing about your code,
+      proposals, or reasoning ever leaves your machine except your own direct calls to Anthropic.
+      This site's stats section reflects the same principle: only developers who explicitly opt in
+      contribute anything here, and only pure counts, never content.
+    </p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var API = 'https://api.sreditor.ca/v1/aggregate';
+
+  function formatPct(value) {
+    return value === null ? '—' : Math.round(value) + '%';
+  }
+
+  fetch(API).then(function (res) { return res.json(); }).then(function (data) {
+    document.getElementById('stat-installs').textContent = data.distinctInstalls;
+    document.getElementById('stat-judged').textContent = data.totalJudged;
+    document.getElementById('stat-rate').textContent = formatPct(data.avgEligibleRatePct);
+    document.getElementById('stat-projects').textContent = data.totalFilingReadyProjects;
+    var note = document.getElementById('stats-note');
+    note.textContent = data.totalSubmissions === 0
+      ? 'No submissions yet — be among the first to opt in.'
+      : 'Updated live from ' + data.totalSubmissions + ' submission' + (data.totalSubmissions === 1 ? '' : 's') + '.';
+  }).catch(function () {
+    document.getElementById('stats-note').textContent = 'Live stats are temporarily unavailable.';
+  });
+})();
+</script>
+
+</body>
+</html>

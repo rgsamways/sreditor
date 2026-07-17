@@ -1,0 +1,13 @@
+{
+  "name": "sreditor-site",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Marketing site for sreditor.ca — thin, static, no build step.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
