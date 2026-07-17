@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { doctor } from './commands/doctor.js';
 import { init } from './commands/init.js';
 import { judge } from './commands/judge.js';
+import { probe } from './commands/probe.js';
 import { reflect } from './commands/reflect.js';
 import { report } from './commands/report.js';
 import { rollup } from './commands/rollup.js';
@@ -39,6 +40,12 @@ program
   .command('reflect')
   .description('Append a dated revision to the anchor document')
   .action(() => runAsync(reflect(process.cwd())));
+
+program
+  .command('probe')
+  .description('Optional pre-implementation interview that captures a draft change\'s genuine uncertainty')
+  .argument('<change-id>', 'Draft OpenSpec change id (the folder name under openspec/changes/)')
+  .action((changeId: string) => runAsync(probe(process.cwd(), changeId)));
 
 program
   .command('judge')
