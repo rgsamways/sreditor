@@ -9,6 +9,9 @@
   "files": [
     "dist"
   ],
+  "workspaces": [
+    "services/*"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/index.ts",
