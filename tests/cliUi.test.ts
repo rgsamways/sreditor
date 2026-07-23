@@ -11,6 +11,10 @@ describe('isFancyTty', () => {
   });
 
   it('is true for a TTY stream with no NO_COLOR/CI set', () => {
+    // Explicitly clear both -- CI runners (e.g. GitHub Actions) set CI=true in the
+    // ambient environment, so this can't rely on the environment being clean already.
+    vi.stubEnv('NO_COLOR', undefined);
+    vi.stubEnv('CI', undefined);
     expect(isFancyTty(fakeStream(true))).toBe(true);
   });
 
