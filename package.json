@@ -1,6 +1,6 @@
 {
   "name": "sreditor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "SR&ED-eligibility judgment CLI for developers using OpenSpec-driven agentic coding workflows.",
   "type": "module",
   "bin": {
