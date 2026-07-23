@@ -92,6 +92,10 @@ npm run typecheck
 | `config` | planned | Set/view API key env var, model choice, project paths |
 | `export-log` | planned | Raw dump of the judgment log |
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) or the [GitHub Releases](https://github.com/rgsamways/sreditor/releases) page for what changed between versions.
+
 ## License
 
 MIT
