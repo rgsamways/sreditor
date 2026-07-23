@@ -1,0 +1,17 @@
+# Changelog
+
+## 0.0.2 — 2026-07-23
+
+- Live progress spinners for `judge` and `rollup` while they wait on Claude API calls, instead of silent multi-second gaps.
+- Colored output across `judge`, `rollup`, `doctor`, `status`, `scan`, `report`, and `stats`.
+- `init`, `probe`, and `reflect` now use `@clack/prompts` for interactive prompts (with clean Ctrl+C cancellation), replacing raw `readline`.
+- Archived the `add-probe-command` OpenSpec change and promoted `uncertainty-probe` to a tracked spec.
+- Fixed placeholder GitHub links on the marketing site and added an npm package link.
+
+## 0.0.1 — 2026-07-21
+
+- Initial public release.
+- Core workflow: `init`/`reflect` (anchor document), `probe` (pre-implementation uncertainty capture), `judge` (per-change SR&ED eligibility judgment), `rollup` (project-level narrative grouping), `report` (T661 Part 2-formatted output).
+- `doctor`, `status`, and `scan` for diagnostics and OpenSpec archive inspection.
+- Opt-in, fully aggregate usage stats (`stats on`/`off`/`show`).
+- Local UI dashboard and `explore` command.
