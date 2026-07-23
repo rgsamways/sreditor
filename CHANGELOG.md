@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.3 — 2026-07-23
+
+- Fixed `sreditor --version` reporting a stale, hardcoded `0.0.1` instead of the actual installed version (confirmed present in the published `0.0.2` tarball).
+
 ## 0.0.2 — 2026-07-23
 
 - Live progress spinners for `judge` and `rollup` while they wait on Claude API calls, instead of silent multi-second gaps.
