@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { SREDITOR_VERSION } from './telemetry/schema.js';
 import { doctor } from './commands/doctor.js';
 import { explore } from './commands/explore.js';
 import { init } from './commands/init.js';
@@ -17,7 +18,7 @@ const program = new Command();
 program
   .name('sreditor')
   .description('SR&ED-eligibility judgment CLI for OpenSpec-driven agentic coding workflows')
-  .version('0.0.1');
+  .version(SREDITOR_VERSION);
 
 program
   .command('scan')

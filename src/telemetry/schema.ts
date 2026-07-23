@@ -4,7 +4,9 @@ import { z } from 'zod';
 // package.json at runtime -- a hardcoded literal avoids any path-resolution
 // fragility between running from src/ (dev) and the bundled dist/ output,
 // which matters here specifically because this value ships in every payload.
-export const SREDITOR_VERSION = '0.0.2';
+// Also the single source of truth for the CLI's own `--version` flag (src/index.ts)
+// -- don't add a second hardcoded literal there.
+export const SREDITOR_VERSION = '0.0.3';
 
 // Every field here is a number, a UUID, or a fixed-shape version string --
 // structurally, there is no field capable of holding a project name, a change
