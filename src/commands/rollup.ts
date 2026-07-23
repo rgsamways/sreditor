@@ -1,4 +1,5 @@
 import { openSpecAdapter } from '../adapters/openspec.js';
+import { c, spin } from '../cliUi.js';
 import { startInterview } from '../interview.js';
 import { createClient, DEFAULT_MODEL, MODEL_INPUT_PRICE_PER_MTOK, MODEL_OUTPUT_PRICE_PER_MTOK } from '../llm/client.js';
 import { buildRollupRequest, ROLLUP_MAX_TOKENS, runRollup } from '../llm/rollup.js';
@@ -19,7 +20,7 @@ export async function rollup(cwd: string, skipConfirm = false): Promise<void> {
   const records = latestJudgmentPerChange(allRecords);
 
   if (records.length === 0) {
-    console.log('No judged changes yet. Run `sreditor judge` first.');
+    console.log(c.gray('No judged changes yet. Run `sreditor judge` first.'));
     return;
   }
 
@@ -27,17 +28,23 @@ export async function rollup(cwd: string, skipConfirm = false): Promise<void> {
     const judgedIds = new Set(records.map((record) => record.changeId));
     const unjudged = findUnjudgedChangeIds(openSpecAdapter.listChanges(cwd), judgedIds);
     if (unjudged.length > 0) {
-      console.log(`Note: ${unjudged.length} archived change(s) have not been judged yet and will not be included: ${unjudged.join(', ')}`);
+      console.log(
+        c.yellow(
+          `Note: ${unjudged.length} archived change(s) have not been judged yet and will not be included: ${unjudged.join(', ')}`,
+        ),
+      );
     }
   }
 
   const request = buildRollupRequest(records);
   const client = createClient();
-  const tokenCount = await client.messages.countTokens({
-    model: DEFAULT_MODEL,
-    system: request.system,
-    messages: request.messages,
-  });
+  const tokenCount = await spin('Estimating cost...', () =>
+    client.messages.countTokens({
+      model: DEFAULT_MODEL,
+      system: request.system,
+      messages: request.messages,
+    }),
+  );
 
   const { inputCost, outputCeiling } = estimateCost(tokenCount.input_tokens);
   console.log(
@@ -53,23 +60,23 @@ export async function rollup(cwd: string, skipConfirm = false): Promise<void> {
       interview.close();
     }
     if (!proceed) {
-      console.log('Not run.');
+      console.log(c.gray('Not run.'));
       return;
     }
   }
 
-  const projects = await runRollup(records);
+  const projects = await spin('Building rollup...', () => runRollup(records));
   saveRollupOutput(cwd, { generatedAt: new Date().toISOString(), projects });
 
   const recordsById = new Map(records.map((record) => [record.changeId, record]));
 
-  console.log(`\n${projects.length} project${projects.length === 1 ? '' : 's'} (saved to .sreditor/rollup.json):\n`);
+  console.log(c.green(`\n${projects.length} project${projects.length === 1 ? '' : 's'} (saved to .sreditor/rollup.json):\n`));
   for (const project of projects) {
     const contributing = project.contributingChangeIds
       .map((id) => recordsById.get(id))
       .filter((record): record is JudgmentRecord => record !== undefined);
 
-    console.log(`- ${project.name} (${computeDateRange(contributing)})`);
+    console.log(`- ${c.bold(project.name)} (${c.dim(computeDateRange(contributing))})`);
     console.log(`  changes: ${project.contributingChangeIds.join(', ')}`);
     console.log(`  confidence: ${project.confidence}`);
     console.log(`  uncertainty: ${project.uncertainty}`);

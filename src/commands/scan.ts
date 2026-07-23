@@ -1,8 +1,9 @@
 import { openSpecAdapter } from '../adapters/openspec.js';
+import { c } from '../cliUi.js';
 
 export function scan(cwd: string): void {
   if (!openSpecAdapter.isAvailable(cwd)) {
-    console.error('No OpenSpec archive found (expected openspec/changes/archive/).');
+    console.error(c.red('No OpenSpec archive found (expected openspec/changes/archive/).'));
     process.exitCode = 1;
     return;
   }
@@ -10,13 +11,13 @@ export function scan(cwd: string): void {
   const changes = openSpecAdapter.listChanges(cwd);
 
   if (changes.length === 0) {
-    console.log('No archived changes found.');
+    console.log(c.gray('No archived changes found.'));
     return;
   }
 
-  console.log(`Found ${changes.length} archived change${changes.length === 1 ? '' : 's'}:`);
+  console.log(c.bold(`Found ${changes.length} archived change${changes.length === 1 ? '' : 's'}:`));
   for (const change of changes) {
     const fileList = Object.keys(change.files).join(', ') || '(no artifact files found)';
-    console.log(`  - ${change.id} [${fileList}]`);
+    console.log(`  - ${c.cyan(change.id)} [${fileList}]`);
   }
 }

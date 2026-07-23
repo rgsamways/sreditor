@@ -1,5 +1,6 @@
 import { accessSync, constants, existsSync, mkdirSync } from 'node:fs';
 import { openSpecAdapter } from '../adapters/openspec.js';
+import { c, icons } from '../cliUi.js';
 import { sreditorDir } from '../paths.js';
 import { isToolAvailable } from '../tools/detect.js';
 
@@ -70,8 +71,10 @@ export function doctor(cwd: string): void {
 
   let allOk = true;
   for (const check of checks) {
-    const icon = check.ok ? '✓' : check.informational ? '·' : '✗';
-    console.log(`${icon} ${check.label}: ${check.detail}`);
+    const icon = check.ok ? icons.ok : check.informational ? icons.info : icons.fail;
+    const line = `${icon} ${check.label}: ${check.detail}`;
+    const colored = check.ok ? c.green(line) : check.informational ? c.gray(line) : c.red(line);
+    console.log(colored);
     if (!check.ok && !check.informational) allOk = false;
   }
 

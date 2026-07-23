@@ -1,5 +1,4 @@
-import { createInterface } from 'node:readline/promises';
-import { stdin, stdout } from 'node:process';
+import * as clack from '@clack/prompts';
 
 export interface Interview {
   ask(question: string): Promise<string>;
@@ -7,24 +6,24 @@ export interface Interview {
   close(): void;
 }
 
-export function startInterview(): Interview {
-  const rl = createInterface({ input: stdin, output: stdout });
-  const lines = rl[Symbol.asyncIterator]();
-
-  async function ask(question: string): Promise<string> {
-    stdout.write(`${question}\n> `);
-    const { value, done } = await lines.next();
-    return done ? '' : value.trim();
+function handleCancel<T>(value: T | symbol): T {
+  if (clack.isCancel(value)) {
+    clack.cancel('Operation cancelled.');
+    process.exit(0);
   }
+  return value;
+}
 
+export function startInterview(): Interview {
   return {
-    ask,
+    async ask(question: string): Promise<string> {
+      const answer = await clack.text({ message: question });
+      return handleCancel(answer);
+    },
     async confirm(prompt: string): Promise<boolean> {
-      const answer = await ask(`${prompt} [y/n]`);
-      return answer.toLowerCase().startsWith('y');
+      const answer = await clack.confirm({ message: prompt });
+      return handleCancel(answer);
     },
-    close(): void {
-      rl.close();
-    },
+    close(): void {},
   };
 }

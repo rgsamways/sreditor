@@ -1,3 +1,4 @@
+import * as clack from '@clack/prompts';
 import { appendProbeSection, findDraftChange, hasExistingProbeSection, readDraftProposal } from '../openspecDraft.js';
 import { startInterview } from '../interview.js';
 import { draftProbeAddendum } from '../llm/probe.js';
@@ -11,8 +12,9 @@ export async function probe(cwd: string, changeId: string): Promise<void> {
     return;
   }
 
-  console.log(
-    'Note: probing is most valuable before implementation starts — the earlier you run this, the fresher the uncertainty.',
+  clack.intro('sreditor probe');
+  clack.note(
+    'Probing is most valuable before implementation starts — the earlier you run this, the fresher the uncertainty.',
   );
 
   const interview = startInterview();
@@ -20,7 +22,7 @@ export async function probe(cwd: string, changeId: string): Promise<void> {
     const existingProposal = readDraftProposal(cwd, changeId) ?? '';
     if (hasExistingProbeSection(existingProposal)) {
       if (!(await interview.confirm('This change already has a probe addendum. Add another one?'))) {
-        console.log('Not saved.');
+        clack.outro('Not saved.');
         return;
       }
     }
@@ -35,21 +37,20 @@ export async function probe(cwd: string, changeId: string): Promise<void> {
 
     const draft = await draftProbeAddendum({ approachRaw, uncertaintyRaw, resolutionRaw });
 
-    console.log('\n--- Drafted probe addendum ---');
-    console.log(`Uncertainty: ${draft.uncertainty}`);
-    console.log(`Alternatives considered: ${draft.alternativesConsidered}`);
-    console.log(`How to resolve: ${draft.howToResolve}`);
-    console.log('---\n');
+    clack.note(
+      `Uncertainty: ${draft.uncertainty}\nAlternatives considered: ${draft.alternativesConsidered}\nHow to resolve: ${draft.howToResolve}`,
+      'Drafted probe addendum',
+    );
 
     if (!(await interview.confirm('Save this addendum to the proposal?'))) {
-      console.log('Not saved.');
+      clack.outro('Not saved.');
       return;
     }
 
     const body = `**Uncertainty:** ${draft.uncertainty}\n**Alternatives considered:** ${draft.alternativesConsidered}\n**How to resolve:** ${draft.howToResolve}`;
     appendProbeSection(cwd, changeId, body);
 
-    console.log(`Appended to openspec/changes/${changeId}/proposal.md`);
+    clack.outro(`Appended to openspec/changes/${changeId}/proposal.md`);
   } finally {
     interview.close();
   }

@@ -1,3 +1,4 @@
+import * as clack from '@clack/prompts';
 import { createAnchor, readAnchor } from '../anchor.js';
 import { startInterview } from '../interview.js';
 import { draftAnchor } from '../llm/anchor.js';
@@ -8,6 +9,8 @@ export async function init(cwd: string): Promise<void> {
     process.exitCode = 1;
     return;
   }
+
+  clack.intro('sreditor init');
 
   const interview = startInterview();
   try {
@@ -21,14 +24,13 @@ export async function init(cwd: string): Promise<void> {
 
     const draft = await draftAnchor({ goalRaw, uncertaintyRaw, successCriteriaRaw });
 
-    console.log('\n--- Drafted anchor ---');
-    console.log(`Goal: ${draft.goal}`);
-    console.log(`Genuine uncertainty: ${draft.uncertainty}`);
-    console.log(`Success criteria: ${draft.successCriteria}`);
-    console.log('---\n');
+    clack.note(
+      `Goal: ${draft.goal}\nGenuine uncertainty: ${draft.uncertainty}\nSuccess criteria: ${draft.successCriteria}`,
+      'Drafted anchor',
+    );
 
     if (!(await interview.confirm('Save this as your anchor document?'))) {
-      console.log('Not saved.');
+      clack.outro('Not saved.');
       return;
     }
 
@@ -36,7 +38,7 @@ export async function init(cwd: string): Promise<void> {
     const body = `**Goal:** ${draft.goal}\n**Genuine uncertainty:** ${draft.uncertainty}\n**Success criteria:** ${draft.successCriteria}`;
     createAnchor(cwd, draft.goal, `Revision ${today} (original)`, body);
 
-    console.log('Saved to .sreditor/anchor.md');
+    clack.outro('Saved to .sreditor/anchor.md');
   } finally {
     interview.close();
   }

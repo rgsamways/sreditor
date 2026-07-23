@@ -4,7 +4,7 @@
   "description": "SR&ED-eligibility judgment CLI for developers using OpenSpec-driven agentic coding workflows.",
   "type": "module",
   "bin": {
-    "sreditor": "./dist/index.js"
+    "sreditor": "dist/index.js"
   },
   "files": [
     "dist"
@@ -39,8 +39,10 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
+    "@clack/prompts": "^1.7.0",
     "commander": "^12.1.0",
     "cross-spawn": "^7.0.6",
+    "picocolors": "^1.1.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

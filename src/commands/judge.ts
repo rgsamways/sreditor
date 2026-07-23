@@ -1,6 +1,7 @@
 import { openSpecAdapter } from '../adapters/openspec.js';
 import type { ChangeArtifact } from '../adapters/types.js';
 import { readAnchor } from '../anchor.js';
+import { c, spin } from '../cliUi.js';
 import { compareDrift } from '../llm/drift.js';
 import { judgeChange, type Judgment } from '../llm/judgment.js';
 import { judgmentsFile } from '../paths.js';
@@ -31,7 +32,7 @@ export function selectChangesToJudge(
 
 export async function judge(cwd: string, targetId?: string): Promise<void> {
   if (!openSpecAdapter.isAvailable(cwd)) {
-    console.error('No OpenSpec archive found (expected openspec/changes/archive/).');
+    console.error(c.red('No OpenSpec archive found (expected openspec/changes/archive/).'));
     process.exitCode = 1;
     return;
   }
@@ -44,21 +45,24 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
   try {
     toJudge = selectChangesToJudge(changes, judgedIds, targetId);
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(c.red(error instanceof Error ? error.message : String(error)));
     process.exitCode = 1;
     return;
   }
 
   if (toJudge.length === 0) {
-    console.log('No unjudged changes to judge.');
+    console.log(c.gray('No unjudged changes to judge.'));
     return;
   }
 
   let eligibleCount = 0;
 
   for (const artifact of toJudge) {
-    const judgment = await judgeChange(artifact, cwd);
-    const drift = anchorText !== null ? (await compareDrift(anchorText, artifact)).narrative : null;
+    const judgment = await spin(`Judging ${artifact.id}...`, () => judgeChange(artifact, cwd));
+    const drift =
+      anchorText !== null
+        ? await spin(`Checking drift for ${artifact.id}...`, async () => (await compareDrift(anchorText, artifact)).narrative)
+        : null;
 
     const record: JudgmentRecord = {
       changeId: artifact.id,
@@ -72,7 +76,8 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
       eligibleCount += 1;
     }
 
-    console.log(`- ${artifact.id}: eligible=${judgment.eligible} confidence=${judgment.confidence}`);
+    const eligibleLabel = judgment.eligible ? c.green(`eligible=${judgment.eligible}`) : c.red(`eligible=${judgment.eligible}`);
+    console.log(`- ${c.bold(artifact.id)}: ${eligibleLabel} confidence=${judgment.confidence}`);
     console.log(`  uncertainty: ${judgment.uncertaintyStatement}`);
     console.log(`  investigation: ${judgment.investigationSteps}`);
     console.log(`  advancement: ${judgment.advancement}`);
@@ -84,7 +89,7 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
     console.log(`  drift: ${drift ?? 'not available — no anchor, run `sreditor init`'}`);
   }
 
-  console.log(`\nJudged ${toJudge.length} change${toJudge.length === 1 ? '' : 's'} (${eligibleCount} eligible).`);
+  console.log(`\nJudged ${toJudge.length} change${toJudge.length === 1 ? '' : 's'} (${c.green(String(eligibleCount))} eligible).`);
 
   await submitStatsIfOptedIn(cwd);
 }
