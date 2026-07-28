@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.4 — 2026-07-28
+
+- Added `sreditor scaffold`: bootstraps a new project by running OpenSpec's own `init` if one isn't set up yet, then appends a usage note to `CLAUDE.md` pointing at `init`/`probe`/`reflect`/`judge`/`rollup`/`report`.
+- `judge` now shows a single live progress bar with a running percentage across all changes being judged, instead of a spinner per change.
+- `status` now reports judged-change completion as a percentage.
+
 ## 0.0.3 — 2026-07-23
 
 - Fixed `sreditor --version` reporting a stale, hardcoded `0.0.1` instead of the actual installed version (confirmed present in the published `0.0.2` tarball).

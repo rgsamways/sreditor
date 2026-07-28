@@ -6,7 +6,7 @@ import { z } from 'zod';
 // which matters here specifically because this value ships in every payload.
 // Also the single source of truth for the CLI's own `--version` flag (src/index.ts)
 // -- don't add a second hardcoded literal there.
-export const SREDITOR_VERSION = '0.0.3';
+export const SREDITOR_VERSION = '0.0.4';
 
 // Every field here is a number, a UUID, or a fixed-shape version string --
 // structurally, there is no field capable of holding a project name, a change
