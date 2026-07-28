@@ -14,6 +14,17 @@ The system SHALL correlate an archived change to a git commit by locating the co
 - **WHEN** an archived change has not yet been committed, or the correlation lookup otherwise fails
 - **THEN** the system returns no commit rather than erroring, and corroborating signals are skipped for that change
 
+### Requirement: Full implementation window, not just the archiving commit
+The system SHALL widen the diff used for corroborating signals to span from the commit that first added the change's draft `proposal.md` through the archiving commit, so multi-commit implementation work is captured rather than only whatever the final archiving commit itself contains.
+
+#### Scenario: A change with commits between drafting and archiving
+- **WHEN** an archived change has a discoverable draft-creation commit that is an ancestor of its archiving commit
+- **THEN** the system diffs from just before the draft commit through the archiving commit, so files changed in intermediate commits are included
+
+#### Scenario: No discoverable or valid draft commit
+- **WHEN** no draft-creation commit can be found for a change, or a rewritten history means it is not an ancestor of the archiving commit
+- **THEN** the system falls back to diffing the archiving commit alone against its parent
+
 ### Requirement: Runtime tool detection and invocation
 The system SHALL detect whether `scc`, `jscpd`, and `sem` are available on the host at judgment time, and SHALL invoke only the tools that are present — never as install-time dependencies of Sreditor itself.
 

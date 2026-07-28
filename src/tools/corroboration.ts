@@ -1,7 +1,7 @@
 import spawn from 'cross-spawn';
 import { existsSync } from 'node:fs';
 import { isToolAvailable } from './detect.js';
-import { findArchivingCommit, getChangedFiles } from './gitDiff.js';
+import { findArchivingCommit, getChangedFilesInRange, resolveImplementationWindow } from './gitDiff.js';
 
 export interface SccLanguageStats {
   name: string;
@@ -99,11 +99,11 @@ export function runJscpd(cwd: string, files: string[]): string | null {
   return truncated ? `${summary}\n(truncated -- ${lines.length - JSCPD_MAX_LINES} more clone pairs not shown)` : summary;
 }
 
-export function runSem(cwd: string, commitSha: string): SemSummary | null {
+export function runSem(cwd: string, fromRef: string, toRef: string): SemSummary | null {
   if (!isToolAvailable('sem')) {
     return null;
   }
-  const output = run(cwd, 'sem', ['diff', '--commit', commitSha, '--format', 'json']);
+  const output = run(cwd, 'sem', ['diff', '--from', fromRef, '--to', toRef, '--format', 'json']);
   if (output === null) {
     return null;
   }
@@ -135,11 +135,12 @@ export function gatherCorroboratingSignals(cwd: string, changeId: string): Corro
     return { scc: null, jscpd: null, sem: null };
   }
 
-  const files = existingPaths(cwd, getChangedFiles(cwd, commitSha));
+  const { fromRef, toRef } = resolveImplementationWindow(cwd, changeId, commitSha);
+  const files = existingPaths(cwd, getChangedFilesInRange(cwd, fromRef, toRef));
 
   return {
     scc: runScc(cwd, files),
     jscpd: runJscpd(cwd, files),
-    sem: runSem(cwd, commitSha),
+    sem: runSem(cwd, fromRef, toRef),
   };
 }

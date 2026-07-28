@@ -3,7 +3,12 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { findArchivingCommit, getChangedFiles } from '../../src/tools/gitDiff.js';
+import {
+  findArchivingCommit,
+  findDraftCreationCommit,
+  getChangedFilesInRange,
+  resolveImplementationWindow,
+} from '../../src/tools/gitDiff.js';
 
 let dir: string;
 
@@ -42,18 +47,78 @@ describe('findArchivingCommit', () => {
   });
 });
 
-describe('getChangedFiles', () => {
-  it('lists the files changed in a commit', () => {
-    writeFileSync(join(dir, 'src.ts'), 'export const x = 1;\n');
+describe('findDraftCreationCommit', () => {
+  it('finds the commit that first added the draft proposal.md', () => {
+    mkdirSync(join(dir, 'openspec', 'changes', 'my-change'), { recursive: true });
+    writeFileSync(join(dir, 'openspec', 'changes', 'my-change', 'proposal.md'), '## Why\n');
     git(['add', '.']);
-    git(['commit', '-q', '-m', 'add src.ts']);
+    git(['commit', '-q', '-m', 'propose my-change']);
+    const expectedSha = git(['rev-parse', 'HEAD']).trim();
 
-    const sha = git(['rev-parse', 'HEAD']).trim();
-    expect(getChangedFiles(dir, sha)).toEqual(['src.ts']);
+    writeFileSync(join(dir, 'openspec', 'changes', 'my-change', 'tasks.md'), '- [ ] task\n');
+    git(['add', '.']);
+    git(['commit', '-q', '-m', 'add tasks']);
+
+    expect(findDraftCreationCommit(dir, 'my-change')).toBe(expectedSha);
   });
 
-  it('returns an empty array for a commit with no parent', () => {
-    const rootSha = git(['rev-list', '--max-parents=0', 'HEAD']).trim();
-    expect(getChangedFiles(dir, rootSha)).toEqual([]);
+  it('returns null for a change with no draft commit', () => {
+    expect(findDraftCreationCommit(dir, 'nonexistent-change')).toBeNull();
+  });
+});
+
+describe('getChangedFilesInRange', () => {
+  it('lists the files changed across a commit range', () => {
+    writeFileSync(join(dir, 'a.ts'), 'export const a = 1;\n');
+    git(['add', '.']);
+    git(['commit', '-q', '-m', 'add a.ts']);
+    const startSha = git(['rev-parse', 'HEAD']).trim();
+
+    writeFileSync(join(dir, 'b.ts'), 'export const b = 2;\n');
+    git(['add', '.']);
+    git(['commit', '-q', '-m', 'add b.ts']);
+    const endSha = git(['rev-parse', 'HEAD']).trim();
+
+    expect(getChangedFilesInRange(dir, `${startSha}^`, endSha)).toEqual(['a.ts', 'b.ts']);
+  });
+
+  it('returns an empty array for an invalid range', () => {
+    expect(getChangedFilesInRange(dir, 'not-a-ref', 'also-not-a-ref')).toEqual([]);
+  });
+});
+
+describe('resolveImplementationWindow', () => {
+  it('spans from the draft commit through the archiving commit when both exist', () => {
+    mkdirSync(join(dir, 'openspec', 'changes', 'my-change'), { recursive: true });
+    writeFileSync(join(dir, 'openspec', 'changes', 'my-change', 'proposal.md'), '## Why\n');
+    git(['add', '.']);
+    git(['commit', '-q', '-m', 'propose my-change']);
+    const draftSha = git(['rev-parse', 'HEAD']).trim();
+
+    writeFileSync(join(dir, 'src.ts'), 'export const x = 1;\n');
+    git(['add', '.']);
+    git(['commit', '-q', '-m', 'implement my-change']);
+
+    mkdirSync(join(dir, 'openspec', 'changes', 'archive'), { recursive: true });
+    git(['mv', join('openspec', 'changes', 'my-change'), join('openspec', 'changes', 'archive', 'my-change')]);
+    git(['commit', '-q', '-m', 'archive my-change']);
+    const archiveSha = git(['rev-parse', 'HEAD']).trim();
+
+    const window = resolveImplementationWindow(dir, 'my-change', archiveSha);
+    expect(window).toEqual({ fromRef: `${draftSha}^`, toRef: archiveSha });
+    expect(getChangedFilesInRange(dir, window.fromRef, window.toRef)).toContain('src.ts');
+  });
+
+  it('falls back to the archiving commit alone when no draft commit is found', () => {
+    mkdirSync(join(dir, 'openspec', 'changes', 'archive', 'my-change'), { recursive: true });
+    writeFileSync(join(dir, 'openspec', 'changes', 'archive', 'my-change', 'proposal.md'), '## Why\n');
+    git(['add', '.']);
+    git(['commit', '-q', '-m', 'archive my-change']);
+    const archiveSha = git(['rev-parse', 'HEAD']).trim();
+
+    expect(resolveImplementationWindow(dir, 'my-change', archiveSha)).toEqual({
+      fromRef: `${archiveSha}^`,
+      toRef: archiveSha,
+    });
   });
 });
