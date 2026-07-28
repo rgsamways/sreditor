@@ -49,6 +49,44 @@ export async function spin<T>(
   }
 }
 
+export interface ProgressBar {
+  /** Advance the bar by `step` units (0 to just update the message) and optionally update its label. */
+  advance(step: number, msg?: string): void;
+  stop(msg?: string): void;
+}
+
+export function createProgress(label: string, max: number, fancy: () => boolean = isFancyTty): ProgressBar {
+  let done = 0;
+  const pct = () => (max > 0 ? Math.round((done / max) * 100) : 100);
+
+  if (!fancy() || max <= 0) {
+    console.log(label);
+    return {
+      advance(step, msg) {
+        done += step;
+        if (step > 0) {
+          console.log(c.dim(`  [${done}/${max}] ${pct()}%${msg ? ` — ${msg}` : ''}`));
+        }
+      },
+      stop(msg) {
+        if (msg) console.log(msg);
+      },
+    };
+  }
+
+  const bar = clack.progress({ style: 'heavy', max });
+  bar.start(label);
+  return {
+    advance(step, msg) {
+      done += step;
+      bar.advance(step, msg ? `${msg} (${pct()}%)` : `${pct()}%`);
+    },
+    stop(msg) {
+      bar.stop(msg);
+    },
+  };
+}
+
 export function heading(message: string): void {
   console.log(c.bold(message));
 }

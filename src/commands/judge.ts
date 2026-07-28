@@ -1,7 +1,7 @@
 import { openSpecAdapter } from '../adapters/openspec.js';
 import type { ChangeArtifact } from '../adapters/types.js';
 import { readAnchor } from '../anchor.js';
-import { c, spin } from '../cliUi.js';
+import { c, createProgress } from '../cliUi.js';
 import { compareDrift } from '../llm/drift.js';
 import { judgeChange, type Judgment } from '../llm/judgment.js';
 import { judgmentsFile } from '../paths.js';
@@ -56,13 +56,13 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
   }
 
   let eligibleCount = 0;
+  const results: Array<{ artifact: ChangeArtifact; judgment: Judgment; drift: string | null }> = [];
 
+  const bar = createProgress(`Judging ${toJudge.length} change${toJudge.length === 1 ? '' : 's'}...`, toJudge.length);
   for (const artifact of toJudge) {
-    const judgment = await spin(`Judging ${artifact.id}...`, () => judgeChange(artifact, cwd));
-    const drift =
-      anchorText !== null
-        ? await spin(`Checking drift for ${artifact.id}...`, async () => (await compareDrift(anchorText, artifact)).narrative)
-        : null;
+    bar.advance(0, `Judging ${artifact.id}...`);
+    const judgment = await judgeChange(artifact, cwd);
+    const drift = anchorText !== null ? (await compareDrift(anchorText, artifact)).narrative : null;
 
     const record: JudgmentRecord = {
       changeId: artifact.id,
@@ -76,6 +76,12 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
       eligibleCount += 1;
     }
 
+    results.push({ artifact, judgment, drift });
+    bar.advance(1, `Judged ${artifact.id}`);
+  }
+  bar.stop(`Judged ${toJudge.length} change${toJudge.length === 1 ? '' : 's'} (${eligibleCount} eligible).`);
+
+  for (const { artifact, judgment, drift } of results) {
     const eligibleLabel = judgment.eligible ? c.green(`eligible=${judgment.eligible}`) : c.red(`eligible=${judgment.eligible}`);
     console.log(`- ${c.bold(artifact.id)}: ${eligibleLabel} confidence=${judgment.confidence}`);
     console.log(`  uncertainty: ${judgment.uncertaintyStatement}`);
@@ -88,8 +94,6 @@ export async function judge(cwd: string, targetId?: string): Promise<void> {
     }
     console.log(`  drift: ${drift ?? 'not available — no anchor, run `sreditor init`'}`);
   }
-
-  console.log(`\nJudged ${toJudge.length} change${toJudge.length === 1 ? '' : 's'} (${c.green(String(eligibleCount))} eligible).`);
 
   await submitStatsIfOptedIn(cwd);
 }

@@ -10,10 +10,11 @@ export function status(cwd: string): void {
   const judgedIds = new Set(readJsonl<{ changeId: string }>(judgmentsFile(cwd)).map((record) => record.changeId));
   const judgedCount = judgedIds.size;
   const unjudgedCount = Math.max(changeCount - judgedCount, 0);
+  const pctComplete = changeCount > 0 ? Math.round((judgedCount / changeCount) * 100) : 100;
 
   console.log(`Source: ${adapterAvailable ? c.green('openspec (detected)') : c.yellow('none detected')}`);
   console.log(`Archived changes: ${changeCount}`);
-  console.log(`Judged: ${c.green(String(judgedCount))}`);
+  console.log(`Judged: ${c.green(String(judgedCount))} (${pctComplete}% complete)`);
   console.log(`Unjudged: ${unjudgedCount > 0 ? c.yellow(String(unjudgedCount)) : c.green('0')}`);
 
   const anchorText = readAnchor(cwd);

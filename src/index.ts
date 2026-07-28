@@ -8,6 +8,7 @@ import { probe } from './commands/probe.js';
 import { reflect } from './commands/reflect.js';
 import { report } from './commands/report.js';
 import { rollup } from './commands/rollup.js';
+import { scaffold } from './commands/scaffold.js';
 import { scan } from './commands/scan.js';
 import { statsOff, statsOn, statsShow } from './commands/stats.js';
 import { status } from './commands/status.js';
@@ -34,6 +35,11 @@ program
   .command('doctor')
   .description('Pre-flight check: API key, source detection, writable state directory')
   .action(() => doctor(process.cwd()));
+
+program
+  .command('scaffold')
+  .description("Bootstrap a new project: run OpenSpec's own init if needed, then point at Sreditor's other commands")
+  .action(() => runAsync(scaffold(process.cwd())));
 
 program
   .command('init')
