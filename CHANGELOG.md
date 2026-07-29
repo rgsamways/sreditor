@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.5 — 2026-07-29
+
+- Fixed the `scc`/`jscpd`/`sem` corroborating signals to analyze a change's full implementation window instead of only its final archiving commit. Previously, workflows with several commits between implementing and archiving a change would only ever see whatever the archiving commit itself touched — often just a folder move with no code in it. Verified against a real project's archive history: 8 of 15 changes now correctly widen (one from 14 files to 47).
+
 ## 0.0.4 — 2026-07-28
 
 - Added `sreditor scaffold`: bootstraps a new project by running OpenSpec's own `init` if one isn't set up yet, then appends a usage note to `CLAUDE.md` pointing at `init`/`probe`/`reflect`/`judge`/`rollup`/`report`.
