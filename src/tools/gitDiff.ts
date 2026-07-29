@@ -20,9 +20,37 @@ export function findArchivingCommit(cwd: string, changeId: string): string | nul
   return shas[0] ?? null;
 }
 
-export function findDraftCreationCommit(cwd: string, changeId: string): string | null {
-  const draftPath = join('openspec', 'changes', changeId, 'proposal.md').split('\\').join('/');
-  const output = runGit(cwd, ['log', '--reverse', '--diff-filter=A', '--format=%H', '--', draftPath]);
+/**
+ * OpenSpec's own archive step commonly renames the draft folder (e.g.
+ * "my-change") to a date-prefixed archive folder (e.g. "2026-07-27-my-change")
+ * -- the two names don't match, so the draft path can't be guessed from
+ * changeId alone. Uses git's rename detection on the archiving commit itself
+ * to find what the archived proposal.md's path actually was before the move.
+ */
+function findRenamedFromPath(cwd: string, archivingCommitSha: string, changeId: string): string | null {
+  const archivedProposalPath = `openspec/changes/archive/${changeId}/proposal.md`;
+  const output = runGit(cwd, ['show', '-M', '--name-status', '--format=', archivingCommitSha]);
+  if (output === null) {
+    return null;
+  }
+
+  for (const line of output.split('\n')) {
+    const [status, oldPath, newPath] = line.split('\t');
+    if (status !== undefined && oldPath !== undefined && newPath !== undefined) {
+      if (status.startsWith('R') && newPath === archivedProposalPath) {
+        return oldPath;
+      }
+    }
+  }
+  return null;
+}
+
+export function findDraftCreationCommit(cwd: string, changeId: string, archivingCommitSha: string): string | null {
+  const draftProposalPath =
+    findRenamedFromPath(cwd, archivingCommitSha, changeId) ??
+    join('openspec', 'changes', changeId, 'proposal.md').split('\\').join('/');
+
+  const output = runGit(cwd, ['log', '--reverse', '--diff-filter=A', '--format=%H', '--', draftProposalPath]);
   if (output === null) {
     return null;
   }
@@ -67,7 +95,7 @@ export function resolveImplementationWindow(
   changeId: string,
   archivingCommitSha: string,
 ): ImplementationWindow {
-  const draftCommitSha = findDraftCreationCommit(cwd, changeId);
+  const draftCommitSha = findDraftCreationCommit(cwd, changeId, archivingCommitSha);
   if (draftCommitSha === null || !isAncestor(cwd, draftCommitSha, archivingCommitSha)) {
     return { fromRef: `${archivingCommitSha}^`, toRef: archivingCommitSha };
   }
